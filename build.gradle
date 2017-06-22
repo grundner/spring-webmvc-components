@@ -1,6 +1,9 @@
+group "biz.grundner.web"
 version '0.1-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -17,8 +20,70 @@ ext {
 dependencies {
 
     compile group: 'org.springframework', name: 'spring-core', version: springVersion
-    compile group: 'org.springframework', name: 'spring-beans', version: springVersion
+    compile group: 'org.springframework', name: 'spring-webmvc', version: springVersion
 
     compile group: 'org.thymeleaf', name: 'thymeleaf', version: thymeleafVersion
     compile group: 'org.thymeleaf', name: 'thymeleaf-spring4', version: thymeleafVersion
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.artifactId = 'spring-webmvc-components'
+
+            pom.project {
+                name 'Spring Web MVC Components'
+                packaging 'jar'
+                description 'Create reusable components for the Spring Framework with Thymeleaf'
+                url 'https://github.com/grundner/spring-webmvc-components/'
+
+                scm {
+                    url 'https://github.com/grundner/spring-webmvc-components.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'stephangrundner'
+                        name 'Stephan Grundner'
+                        email 'stephangrundner@gmail.com'
+                    }
+                }
+            }
+        }
+    }
 }
